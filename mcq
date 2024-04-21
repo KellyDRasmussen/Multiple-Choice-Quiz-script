@@ -1,0 +1,106 @@
+// Part 1: Generate Quiz Questions from the Form and Store Them in a New Sheet
+function processData() {
+    var form = FormApp.getActiveForm(); // Grab the data
+    var formResponses = form.getResponses();
+    var latestResponse = formResponses[formResponses.length - 1]; // Get the latest form response
+    var itemResponses = latestResponse.getItemResponses();
+
+    // Assuming specific items for numQuestions, topic, and level based on their order in the form
+    var numQuestions = itemResponses[0].getResponse(); // Adjust index as per your form setup
+    var topic = itemResponses[1].getResponse(); // Adjust index as per your form setup
+    var level = itemResponses[2].getResponse(); // Adjust index as per your form setup
+
+    var questionsCSV = generateQuestions(numQuestions, topic, level); // Call to generate questions
+    var newSheet = createNewSheet(topic, questionsCSV); // Create a new sheet and populate with generated data
+    createFormFromSheet(newSheet); // Call to create a form from the new sheet
+}
+
+// Part 2: Generate Questions using ChatGPT (OpenAI)
+function generateQuestions(numQuestions, topic, level) {
+  var apiKey = 'Enter API key here'; //You need to get your own API key to put here
+  var endpoint = 'https://api.openai.com/v1/completions';
+
+  var promptText = `Generate ${numQuestions} multiple choice questions about ${topic} for ${level} level students, formatted as a CSV. Include headers 'Question Number', 'Question', 'A', 'B', 'C', 'D', and 'Correct Option'. Each question should be listed numerically starting from 1. Provide four answer choices per question without prefacing them with 'A', 'B', 'C', 'D', followed by the correct answer label ('A', 'B', 'C', or 'D'). Ensure that the data is well-formatted for direct spreadsheet use.`;
+
+  var payload = {
+    model: "gpt-3.5-turbo-instruct",
+    prompt: promptText,
+    max_tokens: 1000,
+    n: 1,
+    stop: null,
+    temperature: 0.5
+  };
+
+  var options = {
+    method : 'post',
+    contentType : 'application/json',
+    payload : JSON.stringify(payload),
+    headers : {
+      'Authorization': 'Bearer ' + apiKey
+    }
+  };
+
+  var response = UrlFetchApp.fetch(endpoint, options);
+  var responseData = JSON.parse(response.getContentText());
+  return responseData.choices[0].text;
+}
+
+// Part 3: Create New Sheet to Store Generated Questions
+function createNewSheet(sheetName, csvData) {
+  var ss = SpreadsheetApp.create(sheetName); // Create a new spreadsheet
+  var sheet = ss.getSheets()[0];
+  var data = Utilities.parseCsv(csvData.trim()); // Trim and parse CSV data
+  sheet.getRange(1, 1, data.length, data[0].length).setValues(data); // Populate the sheet
+  return sheet; // Return this new sheet for further processing
+}
+
+// Part 4: Create a new quiz from the generated questions
+function createFormFromSheet(sheet) {
+    // Assuming 'sheet' is a valid Sheet object passed as an argument
+    try {
+        var data = sheet.getDataRange().getValues(); // Read data from the provided sheet
+        var formTitle = sheet.getParent().getName();  // Get the parent Spreadsheet's name to use as the form title
+
+        var form = FormApp.create(formTitle) // Creates a new form with the spreadsheet's name
+                          .setDescription('Generated Quiz Topic: ' + formTitle);
+
+        form.setIsQuiz(true); // Set the form as a quiz
+        form.setCollectEmail(false); // Require respondents to submit their email address
+    // Add a short text question for the test taker's name at the beginning
+    form.addTextItem()
+        .setTitle("Please enter your name:")
+        .setRequired(true);
+         
+       
+        // Process each row in the sheet except the header
+        data.forEach(function(row, index) {
+            if (index > 0) { // Skip header row
+                var item = form.addMultipleChoiceItem();
+                item.setTitle(row[1])
+                    .setChoices([
+                        item.createChoice(row[2], row[6] === 'A'),
+                        item.createChoice(row[3], row[6] === 'B'),
+                        item.createChoice(row[4], row[6] === 'C'),
+                        item.createChoice(row[5], row[6] === 'D')
+                    ])
+                    .setPoints(1) // Assign points for correct answer
+                    .setRequired(false);
+
+                // Set feedback for correct and incorrect answers
+                var feedbackForCorrect = FormApp.createFeedback().setText("Well done!").build();
+                var feedbackForIncorrect = FormApp.createFeedback().setText("Sorry, that's incorrect.").build();
+                item.setFeedbackForCorrect(feedbackForCorrect);
+                item.setFeedbackForIncorrect(feedbackForIncorrect);
+            }
+        });
+    
+    
+        Logger.log('Quiz Form created: ' + form.getEditUrl());
+    } catch (e) {
+        Logger.log("Error: " + e.toString());
+    }
+}
+
+
+
+
