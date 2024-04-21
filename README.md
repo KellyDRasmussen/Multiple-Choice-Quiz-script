@@ -63,5 +63,4 @@ Follow these steps to obtain an API key from OpenAI, which you'll need to authen
 ### Usage Instructions
 - **To Generate a Quiz**: Fill out the Google Form linked with this script with the required information about the quiz. The script will automatically generate a new Google Form quiz based on the latest form submission.
 - **To Access Generated Quizzes**: Check the console log in the Google Apps Script editor for URLs of generated quizzes or refresh you Google Drive
-
-This README outlines how to set up and use the Google Forms Quiz Generator script. Adjust the script and deployment details as per your specific needs and Google Workspace environment.
+- **Using Quizzes**: If you prefer that students receive their feedback straight away:- in the generated form, you need to go to Settings, and select Immediately after each submission under Release Marks. There are some choices about Missed questions, Correct answers and Point values to setup.
