@@ -11,7 +11,7 @@ This project consists of a Google Apps Script that automates the creation of qui
 ## Setup
 To deploy and run this script, follow these steps:
 1. **Google Form Setup**:
-   - Create a Google Form intended to collect three inputs: the number of questions, topic, and level.
+   - Create a Google Form intended to collect three inputs: the number of questions, topic, and level. There is a screenshot of my form for reference.
 2. **Google Sheets Setup**:
    - The first time you respond, a Google Sheet is generated.
 3. **Get an OpenAI API key**
