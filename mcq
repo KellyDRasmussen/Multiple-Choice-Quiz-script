@@ -1,3 +1,5 @@
+// You will need to set the trigger, see the ReadMe for how.
+
 // Part 1: Generate Quiz Questions from the Form and Store Them in a New Sheet
 function processData() {
     var form = FormApp.getActiveForm(); // Grab the data
@@ -17,7 +19,7 @@ function processData() {
 
 // Part 2: Generate Questions using ChatGPT (OpenAI)
 function generateQuestions(numQuestions, topic, level) {
-  var apiKey = 'Enter API key here'; //You need to get your own API key to put here
+  var apiKey = 'Enter API key here'; //You need to get your own API key to put here. See the ReadMe for details
   var endpoint = 'https://api.openai.com/v1/completions';
 
   var promptText = `Generate ${numQuestions} multiple choice questions about ${topic} for ${level} level students, formatted as a CSV. Include headers 'Question Number', 'Question', 'A', 'B', 'C', 'D', and 'Correct Option'. Each question should be listed numerically starting from 1. Provide four answer choices per question without prefacing them with 'A', 'B', 'C', 'D', followed by the correct answer label ('A', 'B', 'C', or 'D'). Ensure that the data is well-formatted for direct spreadsheet use.`;
@@ -70,30 +72,36 @@ function createFormFromSheet(sheet) {
     form.addTextItem()
         .setTitle("Please enter your name:")
         .setRequired(true);
-         
-       
+
         // Process each row in the sheet except the header
         data.forEach(function(row, index) {
             if (index > 0) { // Skip header row
                 var item = form.addMultipleChoiceItem();
-                item.setTitle(row[1])
-                    .setChoices([
-                        item.createChoice(row[2], row[6] === 'A'),
-                        item.createChoice(row[3], row[6] === 'B'),
-                        item.createChoice(row[4], row[6] === 'C'),
-                        item.createChoice(row[5], row[6] === 'D')
-                    ])
+                item.setTitle(row[1]);
+                var choices = [];
+                
+                // Create choices and determine the correct one based on column 7
+                for (var i = 3; i <= 6; i++) { // Assuming options are from column 3 to 6 (C to F)
+                    var isCorrect = (row[6] === 'A' && i === 3) || 
+                                    (row[6] === 'B' && i === 4) ||
+                                    (row[6] === 'C' && i === 5) ||
+                                    (row[6] === 'D' && i === 6);
+                    choices.push(item.createChoice(row[i - 1], isCorrect));
+                }
+                
+                item.setChoices(choices)
                     .setPoints(1) // Assign points for correct answer
-                    .setRequired(false);
+                    .setRequired(false); // Make answering required
 
-                // Set feedback for correct and incorrect answers
-                var feedbackForCorrect = FormApp.createFeedback().setText("Well done!").build();
-                var feedbackForIncorrect = FormApp.createFeedback().setText("Sorry, that's incorrect.").build();
+                // Optionally set feedback for correct and incorrect answers
+                var feedbackForCorrect = FormApp.createFeedback().setText("Correct").build();
+                var feedbackForIncorrect = FormApp.createFeedback().setText("Incorrect").build();
                 item.setFeedbackForCorrect(feedbackForCorrect);
                 item.setFeedbackForIncorrect(feedbackForIncorrect);
             }
-        });
-    
+        });  
+       
+         
     
         Logger.log('Quiz Form created: ' + form.getEditUrl());
     } catch (e) {
