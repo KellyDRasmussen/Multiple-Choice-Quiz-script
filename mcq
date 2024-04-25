@@ -24,7 +24,7 @@ function generateQuestions(numQuestions, topic, level) {
   var apiKey = 'Enter API key here'; //You need to get your own API key to put here. See the ReadMe for details
   var endpoint = 'https://api.openai.com/v1/completions';
 
-  var promptText = `Generate ${numQuestions} multiple choice questions about ${topic} for ${level} level students, formatted as a CSV. Include headers 'Question Number', 'Question', 'A', 'B', 'C', 'D', and 'Correct Option'. Each question should be listed numerically starting from 1. Provide four answer choices per question without prefacing them with 'A', 'B', 'C', 'D', followed by the correct answer label ('A', 'B', 'C', or 'D'). Ensure that the data is well-formatted for direct spreadsheet use.`;
+ var promptText = `Generate ${numQuestions} multiple choice questions about ${topic} for ${level} level students, formatted as a CSV. Include headers 'Question Number', 'Question', 'A', 'B', 'C', 'D', and 'Correct Option'. Each question should be listed numerically starting from 1. Encapsulate the questions with quotations marks "". Provide four answer choices per question without prefacing them with 'A', 'B', 'C', 'D', followed by the correct answer label ('A', 'B', 'C', or 'D'). Ensure that the data is well-formatted for direct spreadsheet use, with commas only used as delimiters. `;
 
   var payload = {
     model: "gpt-3.5-turbo-instruct",
